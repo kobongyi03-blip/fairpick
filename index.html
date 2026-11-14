@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<meta name="description" content="공정추첨기 FairPick — 암호화 난수 기반 랜덤 추첨기. 인스타그램 이벤트, 블로그 댓글 추첨, 유튜브 구독자 이벤트를 공정하게 추첨하고 인증서까지 발급하세요. 댓글을 통째로 붙여넣으면 아이디만 자동 추출합니다." />
+<link rel="icon" href="data:," />
+<title>공정추첨기 FairPick — 암호화 난수 랜덤 추첨기</title>
+<style>
+  :root{
+    --ink:#111111;
+    --ink-2:#3D3D3D;
+    --ink-3:#767676;
+    --line:#111111;
+    --line-soft:#D9D9D9;
+    --bg:#FAFAFA;
+    --paper:#FFFFFF;
+    --field:#FFFFFF;
+    --mint:#00C471;
+    --mint-dark:#00A85E;
+    --mint-soft:#E3F8EE;
+    --red:#E03131;
+    --amber-bg:#FFF6DE;
+    --amber-line:#111111;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;
+    font-size:16px;line-height:1.6;letter-spacing:-.01em;
+  }
+  button,[role="button"],select,summary,input:not([type="checkbox"]){min-height:2.25rem}
+  button{font-family:inherit;cursor:pointer}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px 72px}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:16px 0 14px;border-bottom:1.5px solid var(--ink);
+  }
+  .wordmark{font-size:19px;font-weight:900;letter-spacing:.14em}
+  .wordmark .dot{color:var(--mint-dark)}
+  .topbar .tb-note{font-size:12px;color:var(--ink-3);letter-spacing:.06em;text-align:right}
+  @media (max-width:520px){.topbar .tb-note{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:40px 0 30px;border-bottom:1.5px solid var(--ink)}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:.22em;color:var(--ink-3);margin:0 0 14px}
+  .hero h1{font-size:44px;font-weight:900;margin:0 0 12px;letter-spacing:-.035em;line-height:1.12}
+  .hero h1 .hl{background:linear-gradient(transparent 62%, #8FE3BC 62%)}
+  @media (max-width:520px){.hero h1{font-size:32px}}
+  .hero p{margin:0;color:var(--ink-2);font-size:16px;max-width:660px}
+  .hero .facts{display:flex;flex-wrap:wrap;gap:0;margin-top:22px;border:1.5px solid var(--ink);background:var(--paper)}
+  .fact{flex:1;min-width:150px;padding:12px 16px;font-size:13.5px;font-weight:700}
+  .fact + .fact{border-left:1.5px solid var(--ink)}
+  .fact span{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);letter-spacing:.08em;margin-bottom:2px}
+  @media (max-width:640px){.fact{min-width:50%}.fact:nth-child(3){border-left:none;border-top:1.5px solid var(--ink)}.fact:nth-child(4){border-top:1.5px solid var(--ink)}}
+
+  /* ---------- Layout ---------- */
+  .grid{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start;margin-top:24px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--paper);border:1.5px solid var(--line);border-radius:6px;padding:24px}
+  .card + .card{margin-top:20px}
+  .grid .card + .card{margin-top:0}
+  @media (max-width:880px){.grid .card + .card{margin-top:20px}}
+  .card-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+  .card-head .no{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--mint-dark)}
+  .card h2{font-size:19px;font-weight:800;margin:0;letter-spacing:-.02em}
+  .card .sub{color:var(--ink-3);font-size:13.5px;margin:0 0 16px}
+
+  /* ---------- Form ---------- */
+  textarea{
+    width:100%;min-height:190px;resize:vertical;border:1.5px solid var(--line);border-radius:4px;
+    background:var(--field);padding:14px;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);outline:none;
+  }
+  textarea:focus{border-color:var(--ink);box-shadow:3px 3px 0 var(--mint)}
+  textarea::placeholder{color:#A6A6A6}
+  .btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .btn{
+    border:1.5px solid var(--ink);border-radius:4px;padding:10px 16px;font-size:14.5px;font-weight:700;
+    background:var(--paper);color:var(--ink);
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background .12s,transform .05s,box-shadow .12s;
+  }
+  .btn:active{transform:translate(2px,2px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn-ghost{background:var(--paper);color:var(--ink)}
+  .btn-ghost:hover{background:#F0F0F0}
+  .btn-primary{background:var(--mint);color:var(--ink);font-size:16.5px;font-weight:800;padding:15px 20px;width:100%;box-shadow:4px 4px 0 var(--ink)}
+  .btn-primary:hover:not(:disabled){background:#12D67F}
+  .btn-primary:active{box-shadow:1px 1px 0 var(--ink)}
+  .btn-black{background:var(--ink);color:#fff}
+  .btn-black:hover{background:#2B2B2B}
+  .btn-mint{background:var(--mint);color:var(--ink)}
+  .btn-mint:hover{background:#12D67F}
+
+  /* 댓글 추출 */
+  .extract-bar{margin-bottom:10px}
+  .btn-extract{
+    width:100%;background:var(--ink);color:#fff;border:1.5px solid var(--ink);border-radius:4px;
+    padding:13px 16px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn-extract:hover{background:#2B2B2B}
+  .btn-extract .arr{color:var(--mint);font-weight:900}
+  .extract-panel{border:1.5px solid var(--ink);border-radius:4px;background:var(--mint-soft);padding:16px;margin-bottom:12px}
+  .extract-panel .ep-title{font-size:14.5px;font-weight:800;margin:0 0 4px}
+  .extract-panel .ep-desc{font-size:12.5px;color:var(--ink-2);margin:0 0 10px}
+  .extract-panel textarea{min-height:150px;background:#fff}
+  .extract-panel textarea:focus{box-shadow:3px 3px 0 var(--ink)}
+
+  .stat-row{display:flex;margin-top:16px;border:1.5px solid var(--ink)}
+  .stat{flex:1;padding:10px 8px;text-align:center;background:var(--paper)}
+  .stat + .stat{border-left:1.5px solid var(--ink)}
+  .stat .num{font-size:21px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums}
+  .stat .num.mint{color:var(--mint-dark)}
+  .stat .lab{font-size:11.5px;color:var(--ink-3);font-weight:700;letter-spacing:.04em;margin-top:1px}
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 2px;border-top:1px solid var(--line-soft);margin-top:18px}
+  .toggle-row .t-title{font-size:14.5px;font-weight:700}
+  .toggle-row .t-desc{font-size:12.5px;color:var(--ink-3)}
+  .switch{display:inline-flex;flex:none;padding:3px}
+  .switch input{appearance:none;-webkit-appearance:none;position:relative;display:block;width:50px;height:28px;margin:0;
+    border-radius:999px;background:#fff;cursor:pointer;transition:background .18s;outline:none;border:1.5px solid var(--ink)}
+  .switch input::after{content:"";position:absolute;top:2.5px;left:3px;width:19px;height:19px;border-radius:50%;
+    background:var(--ink);transition:left .18s,background .18s}
+  .switch input:checked{background:var(--mint)}
+  .switch input:checked::after{left:24px;background:var(--ink)}
+  .switch input:focus-visible{outline:2px solid var(--mint-dark);outline-offset:2px}
+
+  .winner-ctrl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px;border-top:1px solid var(--line-soft)}
+  .winner-ctrl .w-title{font-size:14.5px;font-weight:700}
+  .winner-ctrl .w-desc{font-size:12.5px;color:var(--ink-3)}
+  .stepper{display:flex;align-items:center;gap:0;flex:none;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+  .stepper button{width:38px;height:38px;border:none;background:var(--paper);
+    font-size:18px;font-weight:800;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0}
+  .stepper button:hover:not(:disabled){background:#F0F0F0}
+  .stepper button:disabled{opacity:.35;cursor:not-allowed}
+  .stepper input{width:50px;height:38px;text-align:center;border:none;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);border-radius:0;
+    font-size:16px;font-weight:800;font-family:inherit;color:var(--ink);background:#fff;outline:none;min-height:0}
+  .hint{font-size:12.5px;color:var(--ink-3);margin-top:12px}
+  .hint.warn{color:var(--red);font-weight:700}
+
+  /* ---------- Ad slot ---------- */
+  .ad-slot{
+    border:1.5px dashed #9A9A9A;border-radius:4px;background:var(--bg);color:#9A9A9A;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    padding:18px 12px;text-align:center;font-size:12.5px;font-weight:700;letter-spacing:.14em;
+  }
+  .ad-slot small{font-size:10.5px;font-weight:500;letter-spacing:.04em;color:#BBBBBB}
+  .ad-slot.in-card{margin-bottom:18px}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;border:1.5px solid var(--ink);border-radius:4px;padding:0;gap:0;margin-bottom:18px;overflow:hidden}
+  .tabs button{flex:1;border:none;background:var(--paper);border-radius:0;padding:12px 8px;font-size:15px;font-weight:800;color:var(--ink-3)}
+  .tabs button + button{border-left:1.5px solid var(--ink)}
+  .tabs button.active{background:var(--ink);color:#fff}
+
+  /* ---------- Roulette ---------- */
+  .wheel-wrap{position:relative;width:min(340px,82vw);margin:6px auto 8px;aspect-ratio:1}
+  .wheel-wrap canvas{width:100%;height:100%;display:block}
+  .wheel-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;
+    width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:24px solid var(--ink)}
+  .wheel-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+    width:66px;height:66px;border-radius:50%;background:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:var(--ink);
+    border:2.5px solid var(--ink);text-align:center;line-height:1.25;pointer-events:none}
+  .wheel-banner{background:var(--amber-bg);border:1.5px solid var(--amber-line);border-radius:4px;
+    padding:12px 14px;font-size:13.5px;font-weight:700;text-align:center;margin-bottom:14px;line-height:1.55}
+  .wheel-banner b{text-decoration:underline;text-underline-offset:3px}
+  .draw-status{text-align:center;min-height:26px;font-size:15px;font-weight:700;color:var(--ink-2);margin:10px 0 14px}
+  .draw-status .win{color:var(--mint-dark);text-decoration:underline;text-underline-offset:3px}
+  .sound-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:13.5px;color:var(--ink-2);font-weight:700}
+
+  /* ---------- Cards ---------- */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:6px 0 16px}
+  .flip{perspective:700px;aspect-ratio:3/4.1}
+  .flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.3,.7,.3,1)}
+  .flip.flipped .flip-inner{transform:rotateY(180deg)}
+  .flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:5px;border:1.5px solid var(--ink);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;text-align:center;overflow:hidden}
+  .flip-back{background:var(--ink);color:#fff}
+  .flip-back .q{font-size:30px;font-weight:900;color:var(--mint)}
+  .flip-back .rank{font-size:12px;font-weight:700;color:#CFCFCF}
+  .flip-front{background:#fff;transform:rotateY(180deg)}
+  .flip-front .medal{font-size:12px;font-weight:800;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:2px 10px}
+  .flip-front .name{font-size:15px;font-weight:800;word-break:break-all;line-height:1.3}
+  .flip-front.first{background:var(--mint-soft)}
+  .flip-front.first .medal{background:var(--mint);color:var(--ink)}
+
+  /* ---------- Certificate ---------- */
+  .cert{border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:#fff}
+  .cert-head{background:var(--ink);color:#fff;padding:18px 22px;display:flex;align-items:center;gap:12px}
+  .cert-head .c-badge{flex:none;width:38px;height:38px;border:1.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .cert-head .c-title{font-size:18px;font-weight:900;letter-spacing:-.01em}
+  .cert-head .c-sub{font-size:12px;color:#BDBDBD;letter-spacing:.06em}
+  .cert-head .c-stamp{margin-left:auto;flex:none;border:1.5px solid var(--mint);color:var(--mint);border-radius:4px;
+    padding:5px 10px;font-size:11.5px;font-weight:800;letter-spacing:.14em;transform:rotate(3deg)}
+  .cert-body{padding:20px 22px}
+  .winner-list{list-style:none;margin:0 0 18px;padding:0}
+  .winner-list li{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1.5px solid var(--ink);border-radius:4px;margin-bottom:7px}
+  .winner-list .rank{flex:none;font-size:12.5px;font-weight:800;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:2px 10px;min-width:46px;text-align:center}
+  .winner-list li.first{background:var(--mint-soft)}
+  .winner-list li.first .rank{background:var(--mint)}
+  .winner-list .name{font-weight:800;font-size:16px;word-break:break-all}
+  .cert-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:13.5px;color:var(--ink-2);margin-bottom:16px;
+    border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);padding:14px 0}
+  @media (max-width:480px){.cert-meta{grid-template-columns:1fr}}
+  .cert-meta .m-lab{font-size:11.5px;color:var(--ink-3);font-weight:700;letter-spacing:.06em}
+  .cert-meta b{color:var(--ink);font-size:14.5px}
+  .verify-box{background:var(--bg);border:1.5px dashed var(--ink);border-radius:4px;padding:12px 14px;font-size:12.5px;color:var(--ink-2)}
+  .verify-box .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;font-weight:700;color:var(--ink);word-break:break-all;letter-spacing:.03em}
+  .cert-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .cert-actions .btn{flex:1;min-width:150px;padding:13px 14px}
+  .cert-actions .btn-main{box-shadow:3px 3px 0 var(--ink)}
+  .cert-actions .btn-main:active{box-shadow:1px 1px 0 var(--ink)}
+  .hidden{display:none !important}
+
+  /* ---------- Fairness test ---------- */
+  .test-result{margin-top:18px}
+  .test-summary{font-size:13.5px;color:var(--ink-2);background:var(--bg);border:1.5px solid var(--line-soft);border-radius:4px;padding:12px 14px;margin-bottom:16px}
+  .test-summary b{color:var(--ink)}
+  .bar-row{display:grid;grid-template-columns:110px 1fr 92px;gap:10px;align-items:center;margin-bottom:8px;font-size:13.5px}
+  @media (max-width:480px){.bar-row{grid-template-columns:92px 1fr 74px;font-size:12.5px}}
+  .bar-row .b-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{display:block;background:#ECECEC;border:1px solid var(--line-soft);border-radius:2px;height:14px;overflow:hidden}
+  .bar-fill{display:block;height:100%;background:var(--mint);border-right:1.5px solid var(--ink);transition:width .5s ease}
+  .bar-row .b-val{text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+  /* ---------- FAQ ---------- */
+  .faq details{background:var(--paper);border:1.5px solid var(--ink);border-radius:5px;margin-bottom:10px;overflow:hidden}
+  .faq summary{cursor:pointer;padding:16px 18px;font-weight:800;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";font-size:20px;color:var(--ink);font-weight:900;flex:none}
+  .faq details[open ] summary::after{content:"−"}
+  .faq .a{padding:0 18px 18px;color:var(--ink-2);font-size:14.5px;border-top:1px solid var(--line-soft);padding-top:14px}
+  .faq .a p{margin:0 0 8px}
+  .faq .a p:last-child{margin-bottom:0}
+  .section-title{font-size:22px;font-weight:900;margin:36px 0 14px;letter-spacing:-.02em}
+  .section-title .no{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--mint-dark);margin-right:8px;vertical-align:3px}
+  footer{margin-top:40px;padding-top:18px;border-top:1.5px solid var(--ink);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--ink-3);font-size:12.5px}
+
+  /* ---------- Toast ---------- */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:#fff;
+    padding:12px 20px;border-radius:4px;border:1.5px solid var(--ink);font-size:14px;font-weight:700;
+    transition:transform .3s ease,opacity .3s ease,visibility .3s;z-index:50;max-width:92vw;text-align:center;pointer-events:none;
+    opacity:0;visibility:hidden}
+  .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
+  @media (prefers-reduced-motion:reduce){
+    .flip-inner{transition:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="wordmark">FAIRPICK<span class="dot">.</span></div>
+    <div class="tb-note mono">CRYPTO RANDOM · NO SIGN-UP</div>
+  </div>
+
+  <header class="hero">
+    <p class="kicker">RANDOM DRAW TOOL</p>
+    <h1>공정추첨기 <span class="hl">FairPick</span></h1>
+    <p>인스타그램 이벤트, 블로그 댓글, 유튜브 구독자 추첨을 위한 랜덤 추첨기입니다. 댓글을 통째로 붙여넣으면 아이디만 골라내고, 암호화 난수로 뽑은 뒤 결과는 인증서로 남겨 드립니다.</p>
+    <div class="facts">
+      <div class="fact"><span>난수 방식</span>암호화 난수 사용</div>
+      <div class="fact"><span>이용 방식</span>회원가입 없이 바로 사용</div>
+      <div class="fact"><span>결과 증빙</span>SHA-256 검증 인증서</div>
+      <div class="fact"><span>데이터 처리</span>브라우저 안에서만 처리</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ===== 명단 입력 ===== -->
+    <section class="card" aria-label="참여자 명단 입력">
+      <div class="card-head"><span class="no">01</span><h2>참여자 명단</h2></div>
+      <p class="sub">줄바꿈, 쉼표, 띄어쓰기로 구분해서 붙여넣으세요.</p>
+
+      <div class="extract-bar">
+        <button class="btn-extract" id="extractToggleBtn" type="button">댓글 텍스트에서 아이디만 추출 <span class="arr">→</span></button>
+      </div>
+
+      <div class="extract-panel hidden" id="extractPanel">
+        <p class="ep-title">댓글 붙여넣기</p>
+        <p class="ep-desc">인스타그램·블로그·유튜브 댓글을 드래그해서 통째로 붙여넣으세요. 아이디와 댓글, "3시간 전", "좋아요 2개", "답글 달기" 같은 문구가 섞여 있어도 줄별 첫 아이디만 골라 명단에 넣습니다.</p>
+        <textarea id="commentInput" placeholder="예)&#10;happy_day_kr 참여완료! 이벤트 너무 좋아요&#10;좋아요 12개 · 3시간 전 · 답글 달기&#10;seoul.foodie&#10;저도 참여합니다~" aria-label="댓글 원문 붙여넣기"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-black" id="extractRunBtn" type="button">아이디 추출해서 명단에 넣기</button>
+          <button class="btn btn-ghost" id="extractSampleBtn" type="button">예시 댓글 채우기</button>
+          <button class="btn btn-ghost" id="extractCloseBtn" type="button">닫기</button>
+        </div>
+        <p class="hint" id="extractResult" style="margin-bottom:0"></p>
+      </div>
+
+      <textarea id="namesInput" placeholder="예)&#10;happy_day_kr&#10;seoul.foodie&#10;minji_0420" aria-label="참여자 명단 입력"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="sampleBtn" type="button">예시 명단 채우기</button>
+        <button class="btn btn-ghost" id="clearBtn" type="button">전체 지우기</button>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="num mint" id="statTotal">0</div><div class="lab">총 참여 인원</div></div>
+        <div class="stat"><div class="num" id="statDup">0</div><div class="lab">중복 제거</div></div>
+        <div class="stat"><div class="num" id="statRaw">0</div><div class="lab">입력된 항목</div></div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="t-title">중복 참여자 자동 제거</div>
+          <div class="t-desc">같은 아이디가 여러 번 있어도 1명으로 계산해요</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="dedupeToggle" checked aria-label="중복 참여자 자동 제거" />
+        </label>
+      </div>
+
+      <div class="winner-ctrl">
+        <div>
+          <div class="w-title">당첨 인원</div>
+          <div class="w-desc">몇 명을 뽑을지 정하세요</div>
+        </div>
+        <div class="stepper">
+          <button type="button" id="winMinus" aria-label="당첨 인원 줄이기">−</button>
+          <input type="number" id="winCount" value="1" min="1" inputmode="numeric" aria-label="당첨 인원 수" />
+          <button type="button" id="winPlus" aria-label="당첨 인원 늘리기">+</button>
+        </div>
+      </div>
+      <p class="hint" id="inputHint">명단을 입력하면 바로 추첨할 수 있어요.</p>
+    </section>
+
+    <!-- ===== 추첨 ===== -->
+    <section class="card" aria-label="추첨">
+      <div class="card-head"><span class="no">02</span><h2>추첨하기</h2></div>
+      <p class="sub">원하는 방식으로 뽑아보세요. 두 방식 모두 같은 암호화 난수를 써요.</p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" id="tabRoulette" class="active" role="tab" aria-selected="true">룰렛 돌리기</button>
+        <button type="button" id="tabCard" role="tab" aria-selected="false">카드 즉시 추첨</button>
+      </div>
+
+      <div class="ad-slot in-card" aria-hidden="true">
+        AD
+        <small>광고 영역 · Google AdSense</small>
+      </div>
+
+      <!-- 룰렛 패널 -->
+      <div id="panelRoulette">
+        <div class="wheel-banner hidden" id="wheelBanner" role="note">참여자가 많아 <b>[카드 즉시 추첨]을 추천합니다</b> — 룰렛 칸이 좁아 이름이 표시되지 않아요</div>
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheel" width="680" height="680"></canvas>
+          <div class="wheel-hub">공정<br/>추첨</div>
+        </div>
+        <div class="draw-status" id="rouletteStatus">명단을 입력하고 추첨 시작을 눌러주세요</div>
+        <button class="btn btn-primary" id="spinBtn" type="button">추첨 시작</button>
+        <div class="sound-row">
+          <span>효과음</span>
+          <label class="switch">
+            <input type="checkbox" id="soundToggle" checked aria-label="효과음 켜기 끄기" />
+          </label>
+          <span id="soundLabel">켜짐</span>
+        </div>
+      </div>
+
+      <!-- 카드 패널 -->
+      <div id="panelCard" class="hidden">
+        <div class="cards-grid" id="cardsGrid">
+          <p class="hint" style="grid-column:1/-1;text-align:center;padding:18px 0">추첨 시작을 누르면 당첨 인원만큼 카드가 놓여요.<br/>여러 명을 한 번에 뽑을 때 편해요.</p>
+        </div>
+        <div class="draw-status" id="cardStatus">명단을 입력하고 추첨 시작을 눌러주세요</div>
+        <button class="btn btn-primary" id="cardDrawBtn" type="button">추첨 시작</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== 인증서 ===== -->
+  <section class="card hidden" id="certSection" style="margin-top:20px" aria-label="공정 추첨 인증서">
+    <div class="cert">
+      <div class="cert-head">
+        <div class="c-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C471" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="6"/><path d="m8.5 15-2 6 5.5-3 5.5 3-2-6"/></svg>
+        </div>
+        <div>
+          <div class="c-title">공정 추첨 인증서</div>
+          <div class="c-sub">FAIRPICK · CRYPTO RANDOM DRAW RESULT</div>
+        </div>
+        <div class="c-stamp">VERIFIED</div>
+      </div>
+      <div class="cert-body">
+        <ul class="winner-list" id="certWinners"></ul>
+        <div class="cert-meta">
+          <div><span class="m-lab">추첨 일시</span><br/><b id="certTime">-</b></div>
+          <div><span class="m-lab">추첨 방식</span><br/><b id="certMode">-</b></div>
+          <div><span class="m-lab">총 응모자 수</span><br/><b id="certTotal">-</b></div>
+          <div><span class="m-lab">중복 제외 수</span><br/><b id="certDup">-</b></div>
+        </div>
+        <div class="verify-box">
+          암호화 난수 검증 코드 (SHA-256)<br/>
+          <span class="code" id="certCode">-</span><br/>
+          <span>검증 코드는 추첨 일시·전체 참여자 명단·당첨자 목록·솔트 난수를 SHA-256으로 해싱한 값의 앞 16자리입니다. 추첨 자체는 암호화 난수 생성기(crypto.getRandomValues)로 진행됐습니다.</span>
+        </div>
+        <div class="cert-actions">
+          <button class="btn btn-black btn-main" id="copyBtn" type="button">결과 텍스트 복사</button>
+          <button class="btn btn-mint btn-main" id="saveCertBtn" type="button">인증서 이미지(PNG) 저장</button>
+          <button class="btn btn-ghost" id="redrawBtn" type="button">당첨자 제외하고 다시 뽑기</button>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slot" style="margin-top:16px" aria-hidden="true">
+      AD
+      <small>광고 영역 · Google AdSense</small>
+    </div>
+  </section>
+
+  <!-- ===== 공정성 테스트 ===== -->
+  <section class="card" style="margin-top:20px" aria-label="공정성 테스트">
+    <div class="card-head"><span class="no">03</span><h2>공정성 테스트</h2></div>
+    <p class="sub">현재 명단으로 10,000번 가상 추첨을 돌려서, 참여자별 당첨 비율이 고르게 나오는지 직접 확인해 보세요.</p>
+    <button class="btn btn-black" id="testBtn" type="button" style="width:100%;padding:14px 20px;font-size:15.5px">10,000회 랜덤 공정성 테스트</button>
+    <div class="test-result hidden" id="testResult">
+      <div class="test-summary" id="testSummary"></div>
+      <div id="testBars"></div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <h2 class="section-title"><span class="no">04</span>사용 방법 &amp; 랜덤 추첨 공정성 안내</h2>
+  <div class="faq">
+    <details>
+      <summary>공정추첨기는 어떻게 사용하나요?</summary>
+      <div class="a">
+        <p>1) 명단 칸에 참여자 아이디나 이름을 붙여넣으세요. 줄바꿈, 쉼표, 띄어쓰기 모두 구분자로 인식합니다. 댓글을 복사해 온 경우에는 위쪽 [댓글 텍스트에서 아이디만 추출] 버튼을 쓰면 더 편합니다.</p>
+        <p>2) 당첨 인원을 정한 뒤, 룰렛 돌리기 또는 카드 즉시 추첨 중 원하는 방식으로 추첨 시작을 누르면 됩니다.</p>
+        <p>3) 추첨이 끝나면 공정 추첨 인증서가 발급됩니다. 결과 텍스트 복사 버튼으로 블로그나 인스타그램 공지글에 바로 붙여넣을 수 있어요.</p>
+      </div>
+    </details>
+    <details>
+      <summary>댓글에서 아이디만 추출하는 기능은 어떻게 동작하나요?</summary>
+      <div class="a">
+        <p>인스타그램, 블로그, 유튜브 댓글을 드래그해 통째로 붙여넣으면, 각 줄의 첫 단어가 아이디 형태(@포함 가능)인 경우에만 명단에 넣습니다. "3시간 전", "2일 전" 같은 시간 표시, "좋아요 2개" 같은 반응 수, 날짜, "답글 달기"·"번역 보기" 같은 버튼 문구는 자동으로 걸러집니다.</p>
+        <p>아이디와 댓글 내용이 한 줄에 같이 있는 경우에도 첫 아이디만 뽑아냅니다. 추출이 끝나면 같은 아이디는 한 번만 남기고 정리해서 명단 칸에 넣어 드립니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>추첨이 정말 공정한가요? 난수는 어떻게 만드나요?</summary>
+      <div class="a">
+        <p>일반적인 Math.random()은 예측 가능한 의사난수라 추첨용으로는 한계가 있습니다. FairPick은 브라우저에 내장된 암호화 난수 생성기 window.crypto.getRandomValues()만 사용합니다. 운영체제의 엔트로피를 기반으로 만들어져 예측이 사실상 불가능합니다.</p>
+        <p>또한 범위 나눗셈에서 생기는 미세한 쏠림(모듈로 편향)을 막기 위해, 범위를 벗어나는 난수는 버리고 다시 뽑는 거부 표본 방식을 씁니다. 모든 참여자가 정확히 같은 확률을 가집니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>중복 참여는 어떻게 처리되나요?</summary>
+      <div class="a">
+        <p>중복 참여자 자동 제거가 켜져 있으면 같은 아이디가 여러 번 입력돼도 1명으로 계산하고, 제거된 건수를 화면에 표시합니다. 댓글을 여러 개 단 사람이 당첨 확률을 높이는 일을 막을 수 있어요. 이벤트 규칙상 중복 응모를 인정한다면 토글을 끄면 됩니다.</p>
+        <p>중복을 허용한 상태에서 [당첨자 제외하고 다시 뽑기]를 누르면, 당첨된 이름 전체가 아니라 당첨된 표 1건씩만 명단에서 빠집니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>공정 추첨 인증서는 무엇인가요?</summary>
+      <div class="a">
+        <p>추첨이 끝날 때마다 당첨자 목록, 추첨 일시, 총 응모자 수, 중복 제외 수, 그리고 검증 코드를 담은 인증서가 발급됩니다. 검증 코드는 추첨 일시·전체 명단·당첨자 목록·솔트 난수를 SHA-256으로 해싱한 값이라, 명단이나 결과가 바뀌면 코드도 달라집니다.</p>
+        <p>[인증서 이미지(PNG) 저장] 버튼을 누르면 인증서를 이미지 파일(FairPick_추첨인증서.png)로 내려받을 수 있어, 당첨자 발표 글에 그대로 첨부할 수 있습니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>참여자가 아주 많으면 어떻게 되나요?</summary>
+      <div class="a">
+        <p>룰렛은 참여자가 30명 이상이면 칸 글자를 자동으로 작게 줄여 겹침을 막고, 40명을 넘으면 칸 안의 이름을 생략하는 대신 [카드 즉시 추첨]을 추천하는 안내가 표시됩니다. 참여자가 많을수록 카드 방식이 결과를 확인하기 편합니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>10,000회 공정성 테스트는 뭔가요?</summary>
+      <div class="a">
+        <p>현재 명단 그대로 10,000번 가상 추첨을 실행해 참여자별 당첨 비율을 막대그래프로 보여주는 기능입니다. 참여자가 10명이면 모두 10% 안팎으로 나와야 정상입니다. 특정인에게 쏠리는 결과가 나오지 않는 것을 직접 눈으로 확인할 수 있습니다.</p>
+      </div>
+    </details>
+    <details>
+      <summary>입력한 명단이 서버로 전송되나요?</summary>
+      <div class="a">
+        <p>아니요. 명단 입력부터 댓글 추출, 추첨, 인증서 발급까지 전부 사용 중인 브라우저 안에서만 처리됩니다. 명단이 외부 서버로 전송되거나 저장되지 않으니, 팔로워 아이디를 안심하고 붙여넣으셔도 됩니다.</p>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    <span>공정추첨기 FairPick · 암호화 난수 기반 랜덤 추첨기</span>
+    <span class="mono">SHA-256 VERIFIED DRAW</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   FairPick — 모든 난수는 crypto.getRandomValues()만 사용
+   ========================================================= */
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------- 암호화 난수 유틸 ---------- */
+function cryptoUint32(){
+  var arr = new Uint32Array(1);
+  window.crypto.getRandomValues(arr);
+  return arr[0];
+}
+/* 0 ~ max-1, 모듈로 편향 없는 거부 표본 방식 */
+function secureRandomInt(max){
+  if (max <= 1) return 0;
+  var limit = Math.floor(4294967296 / max) * max;
+  var x;
+  do { x = cryptoUint32(); } while (x >= limit);
+  return x % max;
+}
+/* 검증 코드용 16진수 문자열 */
+function secureHex(bytes){
+  var arr = new Uint8Array(bytes);
+  window.crypto.getRandomValues(arr);
+  var out = "";
+  for (var i = 0; i < arr.length; i++){
+    out += ("0" + arr[i].toString(16)).slice(-2);
+  }
+  return out.toUpperCase();
+}
+/* 검증 코드: SHA-256(추첨 일시 + 전체 명단 + 당첨자 목록 + 솔트) 앞 16자리 */
+function makeVerifyCode(time, participants, winners){
+  var salt = secureHex(8);
+  var payload = time + "\n" + participants.join(",") + "\n" + winners.join(",") + "\n" + salt;
+  function format(hex16){
+    return "FP-" + hex16.slice(0, 4) + "-" + hex16.slice(4, 8) + "-" + hex16.slice(8, 12) + "-" + hex16.slice(12, 16);
+  }
+  if (window.crypto && window.crypto.subtle && window.crypto.subtle.digest){
+    var data = new TextEncoder().encode(payload);
+    return window.crypto.subtle.digest("SHA-256", data).then(function(buf){
+      var bytes = new Uint8Array(buf);
+      var hex = "";
+      for (var i = 0; i < bytes.length; i++){
+        hex += ("0" + bytes[i].toString(16)).slice(-2);
+      }
+      return format(hex.slice(0, 16).toUpperCase());
+    }).catch(function(){
+      return format(secureHex(8));
+    });
+  }
+  /* crypto.subtle을 쓸 수 없는 환경(비보안 컨텍스트)에서는 암호화 난수로 대체 */
+  return Promise.resolve(format(secureHex(8)));
+}
+
+/* Fisher–Yates 셔플 (암호화 난수) */
+function secureShuffle(list){
+  var a = list.slice();
+  for (var i = a.length - 1; i > 0; i--){
+    var j = secureRandomInt(i + 1);
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* ---------- 상태 ---------- */
+var state = {
+  raw: [],
+  participants: [],
+  dupRemoved: 0,
+  mode: "roulette",
+  spinning: false,
+  drawingCards: false,
+  lastWinners: [],
+  lastResultText: "",
+  lastCert: null,
+  angle: 0
+};
+
+var SAMPLE = [
+  "happy_day_kr","seoul.foodie","minji_0420","baking_mom",
+  "travel_jun","coffee.lover99","dailysnap_","kimchi_king",
+  "yuna_draws","morning_yoga_kr"
+];
+
+/* 룰렛 색상 — 검정/민트/회색 계열로 절제한 팔레트 (bg, 글자색) */
+var WHEEL_SEGMENTS = [
+  { bg:"#00C471", fg:"#111111" },
+  { bg:"#111111", fg:"#FFFFFF" },
+  { bg:"#E7EBE7", fg:"#111111" },
+  { bg:"#FFFFFF", fg:"#111111" },
+  { bg:"#8FE3BC", fg:"#111111" },
+  { bg:"#3D3D3D", fg:"#FFFFFF" },
+  { bg:"#D8DCD8", fg:"#111111" },
+  { bg:"#00A85E", fg:"#FFFFFF" }
+];
+
+/* ---------- 명단 파싱 ---------- */
+function parseNames(){
+  var text = $("namesInput").value || "";
+  var tokens = text.split(/[\n,\s]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+  state.raw = tokens;
+  var dedupe = $("dedupeToggle").checked;
+  if (dedupe){
+    var seen = {}, uniq = [];
+    tokens.forEach(function(name){
+      var key = name.toLowerCase();
+      if (!seen[key]){ seen[key] = true; uniq.push(name); }
+    });
+    state.participants = uniq;
+    state.dupRemoved = tokens.length - uniq.length;
+  } else {
+    state.participants = tokens.slice();
+    state.dupRemoved = 0;
+  }
+  updateStats();
+  clampWinnerCount();
+  drawWheel();
+}
+
+function updateStats(){
+  $("statTotal").textContent = state.participants.length;
+  $("statDup").textContent = state.dupRemoved;
+  $("statRaw").textContent = state.raw.length;
+  var hint = $("inputHint");
+  if (state.raw.length === 0){
+    hint.textContent = "명단을 입력하면 바로 추첨할 수 있어요.";
+    hint.className = "hint";
+  } else if (state.participants.length < 2){
+    hint.textContent = "추첨하려면 참여자가 2명 이상 필요해요.";
+    hint.className = "hint warn";
+  } else if (state.dupRemoved > 0){
+    hint.textContent = "중복 " + state.dupRemoved + "건이 제거됐어요. 총 " + state.participants.length + "명으로 추첨합니다.";
+    hint.className = "hint";
+  } else {
+    hint.textContent = "총 " + state.participants.length + "명으로 추첨할 준비가 됐어요.";
+    hint.className = "hint";
+  }
+}
+
+/* =========================================================
+   댓글 텍스트 → 아이디 추출 파서
+   - 줄 단위로 처리, 줄의 첫 토큰이 아이디 형태일 때만 채택
+   - 시간("3시간 전"), 날짜, "좋아요 N개", "답글 달기" 등 UI 문구 제거
+   ========================================================= */
+var UI_EXACT = {
+  "답글 달기":1,"답글달기":1,"답글 보기":1,"번역 보기":1,"번역보기":1,"댓글 달기":1,
+  "더보기":1,"숨기기":1,"신고":1,"삭제":1,"수정":1,"팔로우":1,"팔로잉":1,"언팔로우":1,
+  "좋아요":1,"공감":1,"하트":1,"답글":1,"공유":1,"저장":1,"메뉴":1,"프로필":1,
+  "방금":1,"방금 전":1,"어제":1,"오늘":1,"구독":1,"구독중":1,"알림":1
+};
+/* 댓글 본문만 한 줄로 적힌 경우 흔한 문구 — 닉네임으로 오인하지 않음 */
+var COMMENT_ONLY_WORDS = {
+  "참여완료":1,"참여합니다":1,"참여해요":1,"참여했어요":1,"응모완료":1,"응모합니다":1,
+  "완료":1,"신청합니다":1,"신청완료":1,"이벤트참여":1,"감사합니다":1,"고맙습니다":1,
+  "축하합니다":1,"축하해요":1,"좋아요":1,"대박":1,"최고":1,"화이팅":1,"파이팅":1
+};
+
+function isNoiseLine(line){
+  if (!line) return true;
+  var compact = line.replace(/\s+/g, " ").trim();
+  if (UI_EXACT[compact] || UI_EXACT[compact.replace(/\s/g, "")]) return true;
+  if (/^\d+\s*(초|분|시간|일|주|개월|년)\s*전$/.test(compact)) return true;                 /* 3시간 전 */
+  if (/^(좋아요|공감|하트)\s*\d*\s*개?$/.test(compact)) return true;                          /* 좋아요 2개 */
+  if (/^답글\s*(달기|보기|모두\s*보기)?\s*\d*\s*개?$/.test(compact)) return true;
+  if (/^\d{2,4}[.\-\/]\s?\d{1,2}([.\-\/]\s?\d{1,2})?\.?\s*(\d{1,2}:\d{2}(:\d{2})?\s*(AM|PM|오전|오후)?)?$/.test(compact)) return true; /* 날짜 */
+  if (/^\d{1,2}:\d{2}\s*(AM|PM|오전|오후)?$/.test(compact)) return true;                     /* 시간만 */
+  if (/^\d+\s*(개|명|회|주|일|시간|분|초)$/.test(compact)) return true;
+  if (/^[·•・\-—_=~*…]+$/.test(compact)) return true;                                        /* 구분선 */
+  if (/^(댓글|추천|조회|작성일|등록일)\s*[:：]?\s*\d*$/.test(compact)) return true;
+  return false;
+}
+
+/* 한 줄에 아이디와 함께 붙은 시간/반응/UI 꼬리 문구 제거 */
+function cleanCommentLine(line){
+  var s = " " + line + " ";
+  s = s.replace(/(좋아요|공감|하트)\s*\d+\s*개/g, " ");
+  s = s.replace(/답글\s*달기/g, " ");
+  s = s.replace(/답글\s*모두\s*보기/g, " ");
+  s = s.replace(/번역\s*보기/g, " ");
+  s = s.replace(/\d+\s*(초|분|시간|일|주|개월|년)\s*전/g, " ");
+  s = s.replace(/\d{2,4}[.\-\/]\d{1,2}[.\-\/]\d{1,2}\.?/g, " ");
+  s = s.replace(/[·•・]/g, " ");
+  return s.trim();
+}
+
+/* 단독 한 줄일 때 아이디/닉네임으로 볼 수 있는 형태 (한글 닉네임 허용) */
+function isIdLikeSingle(token){
+  if (!token) return false;
+  if (COMMENT_ONLY_WORDS[token]) return false;
+  var t = token.replace(/^@+/, "").replace(/[:：,]+$/, "");
+  if (t.length < 2 || t.length > 30) return false;
+  if (/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(t)) return true;
+  if (/^[가-힣][가-힣0-9_-]{1,19}$/.test(t)) return true;
+  return false;
+}
+/* 댓글 본문과 같은 줄에 섞여 있어도 아이디로 볼 수 있는 강한 형태 */
+function isStrongId(token){
+  if (!token) return false;
+  var t = token.replace(/[:：,]+$/, "");
+  if (t.charAt(0) === "@") return t.length >= 3 && /^@[A-Za-z0-9._가-힣-]+$/.test(t);
+  if (/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(t) && /[A-Za-z]/.test(t)){
+    /* 영문 포함 + (구분자/숫자 포함 또는 4자 이상) 이면 아이디로 판단 */
+    if (/[._\-0-9]/.test(t.slice(1)) || t.length >= 4) return true;
+  }
+  return false;
+}
+
+function extractIdsFromComments(rawText){
+  var lines = String(rawText || "").split(/\r?\n/);
+  var ids = [], seen = {};
+  lines.forEach(function(rawLine){
+    var line = rawLine.trim();
+    if (isNoiseLine(line)) return;
+    var cleaned = cleanCommentLine(line);
+    if (!cleaned || isNoiseLine(cleaned)) return;
+    var tokens = cleaned.split(/\s+/).filter(function(s){ return s.length > 0; });
+    if (tokens.length === 0) return;
+    var first = tokens[0];
+    var id = null;
+    if (tokens.length === 1){
+      if (isIdLikeSingle(first)) id = first.replace(/[:：,]+$/, "");
+    } else {
+      if (isStrongId(first)) id = first.replace(/[:：,]+$/, "");
+    }
+    if (id){
+      var key = id.toLowerCase();
+      if (!seen[key]){ seen[key] = true; ids.push(id); }
+    }
+  });
+  return ids;
+}
+
+var COMMENT_SAMPLE = [
+  "happy_day_kr",
+  "좋아요 12개",
+  "3시간 전",
+  "이벤트 참여완료! 평소에 너무 갖고 싶었어요",
+  "답글 달기",
+  "",
+  "seoul.foodie 참여합니다~ 맛집 이벤트 기대돼요",
+  "좋아요 3개 · 1시간 전 · 답글 달기",
+  "",
+  "@minji_0420",
+  "저도 응모해요! 번역 보기",
+  "2일 전",
+  "",
+  "baking_mom",
+  "2026.11.10. 14:22",
+  "홈베이킹 좋아해서 꼭 당첨되고 싶어요",
+  "공감 5",
+  "",
+  "travel_jun 친구랑 같이 가고 싶어요!!",
+  "좋아요 1개",
+  "방금 전"
+].join("\n");
+
+$("extractToggleBtn").addEventListener("click", function(){
+  var panel = $("extractPanel");
+  var opening = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !opening);
+  if (opening) $("commentInput").focus();
+});
+$("extractCloseBtn").addEventListener("click", function(){
+  $("extractPanel").classList.add("hidden");
+});
+$("extractSampleBtn").addEventListener("click", function(){
+  $("commentInput").value = COMMENT_SAMPLE;
+  $("extractResult").textContent = "예시 댓글을 넣었어요. [아이디 추출해서 명단에 넣기]를 눌러보세요.";
+});
+$("extractRunBtn").addEventListener("click", function(){
+  var raw = $("commentInput").value || "";
+  if (!raw.trim()){
+    showToast("먼저 댓글 텍스트를 붙여넣어 주세요");
+    $("commentInput").focus();
+    return;
+  }
+  var ids = extractIdsFromComments(raw);
+  if (ids.length === 0){
+    $("extractResult").textContent = "아이디를 찾지 못했어요. 아이디가 각 줄의 맨 앞에 오는지 확인해 주세요.";
+    showToast("추출된 아이디가 없어요");
+    return;
+  }
+  $("namesInput").value = ids.join("\n");
+  parseNames();
+  $("extractResult").textContent = "댓글에서 아이디 " + ids.length + "개를 추출해 명단에 넣었어요.";
+  showToast("아이디 " + ids.length + "개를 추출했어요");
+});
+
+/* ---------- 당첨 인원 ---------- */
+function getWinnerCount(){
+  var v = parseInt($("winCount").value, 10);
+  if (isNaN(v) || v < 1) v = 1;
+  return v;
+}
+function clampWinnerCount(){
+  var max = Math.max(1, state.participants.length);
+  var v = getWinnerCount();
+  if (v > max) v = max;
+  if (v < 1) v = 1;
+  $("winCount").value = v;
+  $("winMinus").disabled = v <= 1;
+  $("winPlus").disabled = v >= max;
+}
+$("winMinus").addEventListener("click", function(){ $("winCount").value = getWinnerCount() - 1; clampWinnerCount(); });
+$("winPlus").addEventListener("click", function(){ $("winCount").value = getWinnerCount() + 1; clampWinnerCount(); });
+$("winCount").addEventListener("change", clampWinnerCount);
+$("winCount").addEventListener("input", clampWinnerCount);
+
+/* ---------- 입력 이벤트 ---------- */
+$("namesInput").addEventListener("input", parseNames);
+$("dedupeToggle").addEventListener("change", parseNames);
+$("sampleBtn").addEventListener("click", function(){
+  $("namesInput").value = SAMPLE.join("\n");
+  parseNames();
+  showToast("예시 명단 10명을 입력했어요");
+});
+$("clearBtn").addEventListener("click", function(){
+  $("namesInput").value = "";
+  parseNames();
+  hideCert();
+});
+
+/* ---------- 탭 ---------- */
+function setMode(mode){
+  state.mode = mode;
+  $("tabRoulette").classList.toggle("active", mode === "roulette");
+  $("tabCard").classList.toggle("active", mode === "card");
+  $("tabRoulette").setAttribute("aria-selected", mode === "roulette" ? "true" : "false");
+  $("tabCard").setAttribute("aria-selected", mode === "card" ? "true" : "false");
+  $("panelRoulette").classList.toggle("hidden", mode !== "roulette");
+  $("panelCard").classList.toggle("hidden", mode !== "card");
+  if (mode === "roulette") drawWheel();
+}
+$("tabRoulette").addEventListener("click", function(){ setMode("roulette"); });
+$("tabCard").addEventListener("click", function(){ setMode("card"); });
+
+/* ---------- 효과음 (Web Audio) ---------- */
+var audioCtx = null;
+function ensureAudio(){
+  if (!audioCtx){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+}
+function tickSound(){
+  if (!$("soundToggle").checked || !audioCtx) return;
+  try {
+    var t = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.value = 1400;
+    gain.gain.setValueAtTime(0.045, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.035);
+  } catch(e){}
+}
+function fanfareSound(){
+  if (!$("soundToggle").checked) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  try {
+    var notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach(function(freq, i){
+      var t = audioCtx.currentTime + i * 0.09;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + 0.3);
+    });
+  } catch(e){}
+}
+$("soundToggle").addEventListener("change", function(){
+  $("soundLabel").textContent = this.checked ? "켜짐" : "꺼짐";
+  if (this.checked){ ensureAudio(); tickSound(); }
+});
+
+/* ---------- 룰렛 그리기 ---------- */
+var wheelCanvas = $("wheel");
+var wctx = wheelCanvas.getContext("2d");
+
+function drawWheel(){
+  var list = state.participants;
+  /* 참여자 40명 초과 시 [카드 즉시 추첨] 추천 배너 표시 */
+  $("wheelBanner").classList.toggle("hidden", list.length <= 40);
+  var size = wheelCanvas.width;
+  var cx = size / 2, cy = size / 2, r = size / 2 - 8;
+  wctx.clearRect(0, 0, size, size);
+
+  if (list.length === 0){
+    wctx.beginPath(); wctx.arc(cx, cy, r, 0, Math.PI * 2);
+    wctx.fillStyle = "#ECECEC"; wctx.fill();
+    wctx.lineWidth = 3; wctx.strokeStyle = "#111111"; wctx.stroke();
+    wctx.fillStyle = "#767676";
+    wctx.font = "700 28px sans-serif";
+    wctx.textAlign = "center"; wctx.textBaseline = "middle";
+    wctx.fillText("명단을 입력하세요", cx, cy + size * 0.31);
+    return;
+  }
+  var n = list.length;
+  var seg = (Math.PI * 2) / n;
+  for (var i = 0; i < n; i++){
+    var start = state.angle + i * seg;
+    var end = start + seg;
+    var pal = WHEEL_SEGMENTS[i % WHEEL_SEGMENTS.length];
+    wctx.beginPath();
+    wctx.moveTo(cx, cy);
+    wctx.arc(cx, cy, r, start, end);
+    wctx.closePath();
+    wctx.fillStyle = pal.bg;
+    wctx.fill();
+    wctx.strokeStyle = "#111111";
+    wctx.lineWidth = 2.5;
+    wctx.stroke();
+    /* 이름 — 40명 초과 시 칸이 너무 좁아 글자가 겹치므로 생략 */
+    if (n <= 40){
+      wctx.save();
+      wctx.translate(cx, cy);
+      wctx.rotate(start + seg / 2);
+      wctx.textAlign = "right";
+      wctx.textBaseline = "middle";
+      wctx.fillStyle = pal.fg;
+      var label = list[i];
+      var maxLen = n <= 6 ? 12 : (n <= 12 ? 9 : (n <= 20 ? 7 : (n <= 30 ? 6 : 5)));
+      if (label.length > maxLen) label = label.slice(0, maxLen) + "…";
+      /* 30명 이상부터 인원수에 비례해 폰트를 줄이되 최소 10px까지만 */
+      var fontSize = n <= 8 ? 27 : (n <= 16 ? 22 : (n <= 24 ? 16 : (n <= 30 ? 13 : (n <= 36 ? 11 : 10))));
+      wctx.font = "800 " + fontSize + "px sans-serif";
+      wctx.fillText(label, r - 18, 0);
+      wctx.restore();
+    }
+  }
+  /* 바깥 테두리 */
+  wctx.beginPath(); wctx.arc(cx, cy, r, 0, Math.PI * 2);
+  wctx.strokeStyle = "#111111"; wctx.lineWidth = 3; wctx.stroke();
+}
+
+/* 포인터(맨 위, -90도) 아래 칸 인덱스 */
+function segmentAtPointer(poolSize){
+  var seg = (Math.PI * 2) / poolSize;
+  var pointer = -Math.PI / 2;
+  var rel = (pointer - state.angle) % (Math.PI * 2);
+  if (rel < 0) rel += Math.PI * 2;
+  return Math.floor(rel / seg) % poolSize;
+}
+
+/* ---------- 룰렛 추첨 ---------- */
+$("spinBtn").addEventListener("click", function(){
+  if (state.spinning) return;
+  if (!validateDraw()) return;
+  ensureAudio();
+  hideCert();
+  var count = Math.min(getWinnerCount(), state.participants.length);
+  var pool = state.participants.slice();
+  var winners = [];
+  state.spinning = true;
+  $("spinBtn").disabled = true;
+  $("spinBtn").textContent = "추첨 중...";
+
+  function spinOnce(){
+    if (winners.length >= count){
+      state.spinning = false;
+      $("spinBtn").disabled = false;
+      $("spinBtn").textContent = "추첨 시작";
+      $("rouletteStatus").innerHTML = "추첨이 완료됐어요! 아래 인증서를 확인하세요.";
+      fanfareSound();
+      finishDraw(winners, "룰렛 돌리기");
+      return;
+    }
+    var winIdx = secureRandomInt(pool.length);
+    var winner = pool[winIdx];
+    var n = pool.length;
+    var seg = (Math.PI * 2) / n;
+    var centerAngle = winIdx * seg + seg / 2;
+    var pointer = -Math.PI / 2;
+    var twoPi = Math.PI * 2;
+    var currentMod = ((state.angle % twoPi) + twoPi) % twoPi;
+    var targetMod = ((pointer - centerAngle) % twoPi + twoPi) % twoPi;
+    var delta = targetMod - currentMod;
+    if (delta < 0) delta += twoPi;
+    var spins = (5 + secureRandomInt(3)) * twoPi;
+    var startAngle = state.angle;
+    var totalDelta = spins + delta;
+    var duration = 4200 + secureRandomInt(800);
+    var startTime = null;
+    var lastSeg = segmentAtPointer(n);
+    $("rouletteStatus").textContent = (winners.length + 1) + "번째 당첨자를 뽑는 중...";
+
+    function frame(ts){
+      if (!startTime) startTime = ts;
+      var t = Math.min(1, (ts - startTime) / duration);
+      var eased = 1 - Math.pow(1 - t, 5);
+      state.angle = startAngle + totalDelta * eased;
+      drawWheelWithPool(pool);
+      var curSeg = segmentAtPointer(n);
+      if (curSeg !== lastSeg){ lastSeg = curSeg; tickSound(); }
+      if (t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        state.angle = startAngle + totalDelta;
+        winners.push(winner);
+        pool.splice(winIdx, 1);
+        $("rouletteStatus").innerHTML = (winners.length) + "등 확정: <span class='win'>" + escapeHtml(winner) + "</span>";
+        tickSound();
+        setTimeout(spinOnce, 650);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  spinOnce();
+});
+
+function drawWheelWithPool(pool){
+  var saved = state.participants;
+  state.participants = pool;
+  drawWheel();
+  state.participants = saved;
+}
+
+/* ---------- 카드 추첨 ---------- */
+$("cardDrawBtn").addEventListener("click", function(){
+  if (state.drawingCards) return;
+  if (!validateDraw()) return;
+  ensureAudio();
+  hideCert();
+  state.drawingCards = true;
+  $("cardDrawBtn").disabled = true;
+  $("cardDrawBtn").textContent = "추첨 중...";
+  var count = Math.min(getWinnerCount(), state.participants.length);
+  var winners = secureShuffle(state.participants).slice(0, count);
+
+  var grid = $("cardsGrid");
+  grid.innerHTML = "";
+  winners.forEach(function(name, i){
+    var flip = document.createElement("div");
+    flip.className = "flip";
+    flip.innerHTML =
+      '<div class="flip-inner">' +
+        '<div class="flip-face flip-back"><div class="q">?</div><div class="rank">' + (i + 1) + '등 카드</div></div>' +
+        '<div class="flip-face flip-front' + (i === 0 ? " first" : "") + '"><span class="medal">' + (i + 1) + '등</span><span class="name">' + escapeHtml(name) + '</span></div>' +
+      '</div>';
+    grid.appendChild(flip);
+  });
+  $("cardStatus").textContent = "카드를 뒤집는 중...";
+
+  winners.forEach(function(name, i){
+    setTimeout(function(){
+      grid.children[i].classList.add("flipped");
+      tickSound();
+      $("cardStatus").innerHTML = (i + 1) + "등: <span class='win'>" + escapeHtml(name) + "</span>";
+      if (i === winners.length - 1){
+        setTimeout(function(){
+          state.drawingCards = false;
+          $("cardDrawBtn").disabled = false;
+          $("cardDrawBtn").textContent = "추첨 시작";
+          $("cardStatus").textContent = "추첨이 완료됐어요! 아래 인증서를 확인하세요.";
+          fanfareSound();
+          finishDraw(winners, "카드 즉시 추첨");
+        }, 500);
+      }
+    }, 450 + i * 650);
+  });
+});
+
+/* ---------- 공통 검증 ---------- */
+function validateDraw(){
+  if (state.participants.length < 2){
+    showToast("참여자를 2명 이상 입력해 주세요");
+    $("namesInput").focus();
+    return false;
+  }
+  if (getWinnerCount() > state.participants.length){
+    showToast("당첨 인원이 참여 인원보다 많아요");
+    return false;
+  }
+  return true;
+}
+
+/* ---------- 결과 / 인증서 ---------- */
+function pad2(n){ return (n < 10 ? "0" : "") + n; }
+function nowText(){
+  var d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) +
+    " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+}
+
+function finishDraw(winners, modeLabel){
+  state.lastWinners = winners.slice();
+  var time = nowText();
+  var participantsSnapshot = state.participants.slice();
+  var totalSnapshot = state.participants.length;
+  var dupSnapshot = state.dupRemoved;
+  makeVerifyCode(time, participantsSnapshot, winners).then(function(code){
+    renderCert(winners, modeLabel, time, code, totalSnapshot, dupSnapshot);
+  });
+}
+
+function renderCert(winners, modeLabel, time, code, totalCount, dupCount){
+  var ul = $("certWinners");
+  ul.innerHTML = "";
+  winners.forEach(function(name, i){
+    var li = document.createElement("li");
+    if (i === 0) li.className = "first";
+    li.innerHTML = '<span class="rank">' + (i + 1) + '등</span><span class="name">' + escapeHtml(name) + '</span>';
+    ul.appendChild(li);
+  });
+  $("certTime").textContent = time;
+  $("certMode").textContent = modeLabel;
+  $("certTotal").textContent = totalCount + "명";
+  $("certDup").textContent = dupCount + "건";
+  $("certCode").textContent = code;
+
+  state.lastCert = {
+    winners: winners.slice(),
+    time: time,
+    mode: modeLabel,
+    total: totalCount,
+    dup: dupCount,
+    code: code
+  };
+
+  var lines = [];
+  lines.push("🎉 당첨자 발표 🎉");
+  lines.push("");
+  winners.forEach(function(name, i){ lines.push((i + 1) + "등: " + name); });
+  lines.push("");
+  lines.push("· 추첨 일시: " + time);
+  lines.push("· 총 응모자: " + totalCount + "명 (중복 제외 " + dupCount + "건)");
+  lines.push("· 추첨 방식: " + modeLabel);
+  lines.push("· 검증 코드: " + code);
+  lines.push("");
+  lines.push("공정추첨기 FairPick으로 암호화 난수 추첨했습니다.");
+  state.lastResultText = lines.join("\n");
+
+  $("certSection").classList.remove("hidden");
+  $("certSection").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function hideCert(){
+  $("certSection").classList.add("hidden");
+  state.lastWinners = [];
+  state.lastResultText = "";
+  state.lastCert = null;
+}
+
+$("copyBtn").addEventListener("click", function(){
+  if (!state.lastResultText) return;
+  copyText(state.lastResultText);
+});
+
+$("redrawBtn").addEventListener("click", function(){
+  if (state.lastWinners.length === 0) return;
+  var dedupe = $("dedupeToggle").checked;
+  var remaining;
+  if (dedupe){
+    /* 중복 제거 ON: 당첨된 이름은 중복 포함 전부 제외 */
+    var banned = {};
+    state.lastWinners.forEach(function(n){ banned[n.toLowerCase()] = true; });
+    remaining = state.raw.filter(function(n){ return !banned[n.toLowerCase()]; });
+  } else {
+    /* 중복 허용 OFF: 이름 전체가 아니라 당첨된 1건(1표)씩만 제거 */
+    remaining = state.raw.slice();
+    state.lastWinners.forEach(function(winner){
+      var key = winner.toLowerCase();
+      for (var i = 0; i < remaining.length; i++){
+        if (remaining[i].toLowerCase() === key){
+          remaining.splice(i, 1);
+          break;
+        }
+      }
+    });
+  }
+  if (remaining.length < 1){
+    showToast("남은 참여자가 없어요");
+    return;
+  }
+  var removedCount = state.raw.length - remaining.length;
+  $("namesInput").value = remaining.join("\n");
+  parseNames();
+  hideCert();
+  showToast("당첨 " + removedCount + "건을 제외했어요. 다시 추첨하세요");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+/* ---------- 인증서 이미지(PNG) 저장 — Canvas로 직접 그림 ---------- */
+$("saveCertBtn").addEventListener("click", function(){
+  if (!state.lastCert){
+    showToast("먼저 추첨을 완료해 주세요");
+    return;
+  }
+  saveCertImage(state.lastCert);
+});
+
+function saveCertImage(cert){
+  var W = 880;
+  var winners = cert.winners;
+  var headerH = 118;
+  var winnerRowH = 62;
+  var metaH = 168;
+  var verifyH = 108;
+  var footH = 64;
+  var H = headerH + 34 + winners.length * winnerRowH + metaH + verifyH + footH;
+
+  var cvs = document.createElement("canvas");
+  cvs.width = W * 2; cvs.height = H * 2;
+  var g = cvs.getContext("2d");
+  g.scale(2, 2);
+
+  /* 배경 + 카드 틀 (먹색 테두리, 직선적인 각) */
+  g.fillStyle = "#FAFAFA"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#FFFFFF"; g.fillRect(24, 24, W - 48, H - 48);
+  g.lineWidth = 3; g.strokeStyle = "#111111";
+  g.strokeRect(24, 24, W - 48, H - 48);
+
+  /* 헤더 (검정 바) */
+  g.fillStyle = "#111111"; g.fillRect(24, 24, W - 48, headerH);
+  g.fillStyle = "#00C471";
+  g.fillRect(24, 24 + headerH - 6, W - 48, 6);
+  g.fillStyle = "#FFFFFF";
+  g.textBaseline = "alphabetic";
+  g.font = "900 30px sans-serif";
+  g.fillText("공정 추첨 인증서", 56, 24 + 58);
+  g.font = "600 14px sans-serif";
+  g.fillStyle = "#BDBDBD";
+  g.fillText("FAIRPICK · CRYPTO RANDOM DRAW RESULT", 56, 24 + 88);
+  g.font = "900 20px sans-serif";
+  g.fillStyle = "#00C471";
+  g.textAlign = "right";
+  g.fillText("FairPick", W - 56, 24 + 60);
+  g.textAlign = "left";
+
+  var y = 24 + headerH + 30;
+
+  /* 당첨자 목록 */
+  winners.forEach(function(name, i){
+    g.fillStyle = i === 0 ? "#E3F8EE" : "#FFFFFF";
+    g.fillRect(56, y, W - 112, 50);
+    g.lineWidth = 2; g.strokeStyle = "#111111";
+    g.strokeRect(56, y, W - 112, 50);
+    /* 순위 뱃지 */
+    g.beginPath();
+    g.arc(70 + 31, y + 25, 16, 0, Math.PI * 2);
+    g.fillStyle = i === 0 ? "#00C471" : "#FFFFFF"; g.fill();
+    g.lineWidth = 2; g.strokeStyle = "#111111"; g.stroke();
+    g.fillStyle = "#111111";
+    g.font = "800 14px sans-serif";
+    g.textAlign = "center";
+    g.fillText((i + 1) + "등", 70 + 31, y + 30);
+    g.textAlign = "left";
+    /* 이름 (길면 줄임) */
+    var label = String(name);
+    g.font = "800 21px sans-serif";
+    while (label.length > 1 && g.measureText(label).width > W - 260){
+      label = label.slice(0, -1);
+    }
+    if (label !== String(name)) label += "…";
+    g.fillText(label, 150, y + 33);
+    y += winnerRowH;
+  });
+
+  y += 8;
+  g.strokeStyle = "#D9D9D9"; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(56, y); g.lineTo(W - 56, y); g.stroke();
+  y += 38;
+
+  /* 메타 정보 */
+  g.font = "600 14px sans-serif"; g.fillStyle = "#767676";
+  g.fillText("추첨 일시", 56, y);
+  g.fillText("추첨 방식", W / 2 + 8, y);
+  y += 26;
+  g.font = "700 17px sans-serif"; g.fillStyle = "#111111";
+  g.fillText(cert.time, 56, y);
+  g.fillText(cert.mode, W / 2 + 8, y);
+  y += 34;
+  g.font = "600 14px sans-serif"; g.fillStyle = "#767676";
+  g.fillText("총 응모자 수", 56, y);
+  g.fillText("중복 제외 수", W / 2 + 8, y);
+  y += 26;
+  g.font = "700 17px sans-serif"; g.fillStyle = "#111111";
+  g.fillText(cert.total + "명", 56, y);
+  g.fillText(cert.dup + "건", W / 2 + 8, y);
+  y += 30;
+
+  /* 검증 코드 박스 */
+  g.fillStyle = "#FAFAFA"; g.fillRect(56, y, W - 112, 78);
+  g.setLineDash([6, 5]); g.lineWidth = 2; g.strokeStyle = "#111111";
+  g.strokeRect(56, y, W - 112, 78);
+  g.setLineDash([]);
+  g.font = "600 14px sans-serif"; g.fillStyle = "#3D3D3D";
+  g.fillText("암호화 난수 검증 코드 (SHA-256)", 76, y + 28);
+  g.font = "700 17px ui-monospace, Menlo, Consolas, monospace"; g.fillStyle = "#111111";
+  g.fillText(cert.code, 76, y + 56);
+  y += 78 + 34;
+
+  /* 푸터 */
+  g.font = "500 13.5px sans-serif"; g.fillStyle = "#767676";
+  g.textAlign = "center";
+  g.fillText("공정추첨기 FairPick · crypto.getRandomValues 암호화 난수 기반 추첨", W / 2, y);
+  g.textAlign = "left";
+
+  var fileName = "FairPick_추첨인증서.png";
+  function triggerDownload(url){
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  if (cvs.toBlob){
+    cvs.toBlob(function(blob){
+      if (blob){
+        var url = URL.createObjectURL(blob);
+        triggerDownload(url);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      } else {
+        triggerDownload(cvs.toDataURL("image/png"));
+      }
+      showToast("인증서 이미지를 저장했어요");
+    }, "image/png");
+  } else {
+    triggerDownload(cvs.toDataURL("image/png"));
+    showToast("인증서 이미지를 저장했어요");
+  }
+}
+
+function copyText(text){
+  function done(){ showToast("결과가 복사됐어요. 공지글에 붙여넣으세요"); }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+  } else {
+    fallbackCopy(text); done();
+  }
+}
+function fallbackCopy(text){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ---------- 공정성 테스트 (10,000회) ---------- */
+$("testBtn").addEventListener("click", function(){
+  if (state.participants.length < 2){
+    showToast("참여자를 2명 이상 입력해 주세요");
+    $("namesInput").focus();
+    return;
+  }
+  var list = state.participants;
+  var n = list.length;
+  var TRIALS = 10000;
+  var counts = new Array(n).fill(0);
+
+  var CHUNK = 8192;
+  var doneTrials = 0;
+  while (doneTrials < TRIALS){
+    var size = Math.min(CHUNK, TRIALS - doneTrials);
+    var buf = new Uint32Array(size);
+    window.crypto.getRandomValues(buf);
+    var limit = Math.floor(4294967296 / n) * n;
+    for (var i = 0; i < size; i++){
+      var v = buf[i];
+      if (v >= limit){ counts[secureRandomInt(n)]++; }
+      else { counts[v % n]++; }
+    }
+    doneTrials += size;
+  }
+
+  var rows = list.map(function(name, i){ return { name: name, count: counts[i] }; });
+  rows.sort(function(a, b){ return b.count - a.count; });
+  var expected = 100 / n;
+  var maxPct = 0;
+  rows.forEach(function(r){ var p = r.count / TRIALS * 100; if (p > maxPct) maxPct = p; });
+
+  $("testSummary").innerHTML =
+    "총 <b>10,000회</b> 가상 추첨 완료 · 참여자 " + n + "명 · 이론상 기대 비율 <b>" +
+    expected.toFixed(2) + "%</b> · 실제 비율이 기대값 근처로 고르게 분포하면 공정한 추첨입니다.";
+
+  var bars = $("testBars");
+  bars.innerHTML = "";
+  rows.forEach(function(r){
+    var pct = r.count / TRIALS * 100;
+    var row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML =
+      '<span class="b-name" title="' + escapeHtml(r.name) + '">' + escapeHtml(r.name) + "</span>" +
+      '<span class="bar-track"><span class="bar-fill" style="width:0%"></span></span>' +
+      '<span class="b-val">' + pct.toFixed(2) + "% · " + r.count.toLocaleString("ko-KR") + "회</span>";
+    bars.appendChild(row);
+    var fill = row.querySelector(".bar-fill");
+    requestAnimationFrame(function(){
+      fill.style.width = (maxPct > 0 ? (pct / maxPct * 100) : 0) + "%";
+    });
+  });
+  $("testResult").classList.remove("hidden");
+  showToast("10,000회 공정성 테스트가 완료됐어요");
+});
+
+/* ---------- 유틸 ---------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+var toastTimer = null;
+function showToast(msg){
+  var t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+}
+
+/* ---------- 초기화 ---------- */
+parseNames();
+window.addEventListener("resize", drawWheel);
+</script>
+</body>
+</html>
